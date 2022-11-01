@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
   {
-    nome: String,
+    name: String,
     email: String,
     cpf: String,
-    dataNascimento: String,
+    birthDate: String,
     rg: String,
-    sexo: String,
+    sex: String,
   },
   { timestamps: true }
 );
