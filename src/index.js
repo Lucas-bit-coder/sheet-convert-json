@@ -11,6 +11,8 @@ const modelProduct = require("./models/product");
 const modelOrder = require("./models/order");
 mongoose.connect("mongodb://localhost:27017/sheet-converted-json");
 
+app.use(express.json());
+
 app.post("/users", uploadType, async (req, res) => {
   const file = reader.readFile(req.file.destination + req.file.filename);
   let data = [];
@@ -50,13 +52,15 @@ app.post("/products", uploadType, async (req, res) => {
         name: res.nome,
         size: res.tamanho,
         value: res.valor,
+        sku: res["codigo do produto"],
       };
       data.push(res);
       let product = new modelProduct(regProducts);
       const result = await product.save();
     });
   }
-  res.send(data);
+  const products = await modelProduct.find();
+  res.send(products);
 });
 
 app.post("/orders", uploadType, async (req, res) => {
@@ -95,6 +99,22 @@ app.get("/users", async (req, res) => {
 app.get("/products/find", async (req, res) => {
   const products = await modelProduct.findOne({ name: req.query.name });
   res.send(products);
+});
+
+app.get("/products/:id", async (req, res) => {
+  const product = await modelProduct.findOne({ _id: req.params.id });
+  res.send(product);
+});
+
+app.get("/products/sku/:sku", async (req, res) => {
+  const product = await modelProduct.findOne({ sku: req.params.sku });
+  res.send(product);
+});
+
+app.put("/products/:id", async (req, res) => {
+  const _id = req.params.id;
+  const response = await modelProduct.findOneAndUpdate({ _id }, req.body);
+  res.send(response);
 });
 
 app.listen(PORT, () => {
