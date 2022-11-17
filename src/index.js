@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const modelUser = require("./models/user");
 const modelProduct = require("./models/product");
 const modelOrder = require("./models/order");
+const modelStartup = require("./models/startup");
 mongoose.connect("mongodb://localhost:27017/sheet-converted-json");
 
 app.use(express.json());
@@ -81,6 +82,36 @@ app.post("/orders", uploadType, async (req, res) => {
       data.push(res);
       let order = new modelOrder(regOrders);
       const result = await order.save();
+    });
+  }
+  res.send(data);
+});
+
+app.post("/startup", uploadType, async (req, res) => {
+  const file = reader.readFile(req.file.destination + req.file.filename);
+  let data = [];
+
+  const sheets = file.SheetNames;
+
+  for (let i = 0; i < sheets.length; i++) {
+    const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]]);
+    temp.forEach(async (res) => {
+      console.log(res);
+      const regStartups = {
+        eventId: res.eventId,
+        startupId: res.startupId,
+        startupName: res.startupName,
+        inductId: res.shortId,
+        showCase: res.showCase,
+        group: res.group,
+        curated: res.curated,
+        rank: res.rank,
+        fonte: res.Fonte,
+      };
+      data.push(res);
+      let startup = new modelStartup(regStartups);
+      console.log(regStartups);
+      const result = await startup.save();
     });
   }
   res.send(data);
