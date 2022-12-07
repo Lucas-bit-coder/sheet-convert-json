@@ -6,11 +6,12 @@ const PORT = 3002;
 const files = multer({ dest: "files/" });
 const uploadType = files.single("file");
 const mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost:27017/sheet-converted-json");
 const modelUser = require("./models/user");
 const modelProduct = require("./models/product");
 const modelOrder = require("./models/order");
 const modelStartup = require("./models/startup");
-mongoose.connect("mongodb://localhost:27017/sheet-converted-json");
+const { updateOne } = require("./models/user");
 
 app.use(express.json());
 
@@ -96,7 +97,6 @@ app.post("/startup", uploadType, async (req, res) => {
   for (let i = 0; i < sheets.length; i++) {
     const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]]);
     temp.forEach(async (res) => {
-      console.log(res);
       const regStartups = {
         eventId: res.eventId,
         startupId: res.startupId,
@@ -110,7 +110,6 @@ app.post("/startup", uploadType, async (req, res) => {
       };
       data.push(res);
       let startup = new modelStartup(regStartups);
-      console.log(regStartups);
       const result = await startup.save();
     });
   }
@@ -147,6 +146,57 @@ app.put("/products/:id", async (req, res) => {
   const response = await modelProduct.findOneAndUpdate({ _id }, req.body);
   res.send(response);
 });
+
+app.post("/products/update", uploadType, async (req, res) => {
+  try {
+    const file = reader.readFile(req.file.destination + req.file.filename);
+    let data = [];
+
+    const sheets = file.SheetNames;
+
+    for (let i = 0; i < sheets.length; i++) {
+      const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]]);
+      temp.forEach(async (res) => {
+        let productUpdate = {};
+        // array.forEach(async (element) => {
+        let product = await modelProduct
+          .updateOne(
+            {
+              sku: res["codigo do produto"],
+            },
+            {
+              category: res.categoria,
+              name: res.nome,
+              size: res.tamanho,
+              value: res.valor,
+            }
+          )
+          .exec();
+      });
+
+      // const regProducts = {
+      //   category: res.categoria,
+      //   name: res.nome,
+      //   size: res.tamanho,
+      //   value: res.valor,
+      //   sku: res["codigo do produto"],
+      // };
+      // data.push(res);
+      // let update = new updateProduct(updateProduct);
+      // const result = await update.save();
+      // });
+    }
+    res.send(data);
+  } catch (e) {
+    console.log(e);
+  }
+});
+// receber um arquivo excel aqui
+// percorrer o arquivo excel
+// recuperar o product dentro do for pelo sku(codigo do produto)
+// depois de recuperar, pegar os valores do objeto do for e setar dentro desse objeto
+// que você recuperou
+// depois é só chamar um "modelProduct.update"
 
 app.listen(PORT, () => {
   console.log(`🚀👍 Serviço executando em: http://localhost:${PORT}`);
