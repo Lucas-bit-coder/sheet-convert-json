@@ -6,6 +6,7 @@ const ordersSchema = new mongoose.Schema(
     value: String,
     delivery: String,
     payment: String,
+    sku: String,
   },
   { timestamps: true }
 );

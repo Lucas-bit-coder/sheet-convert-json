@@ -31,6 +31,7 @@ app.post("/users", uploadType, async (req, res) => {
         birthDate: res["Data de Nascimento"],
         rg: res.RG,
         sex: res.Sexo,
+        sku: res["codigo do produto"],
       };
       data.push(res);
       let user = new modelUser(regUsers);
@@ -79,6 +80,7 @@ app.post("/orders", uploadType, async (req, res) => {
         value: res.valor,
         delivery: res.entrega,
         payment: res.pagamento,
+        sku: res["codigo do produto"],
       };
       data.push(res);
       let order = new modelOrder(regOrders);
@@ -173,30 +175,80 @@ app.post("/products/update", uploadType, async (req, res) => {
           )
           .exec();
       });
-
-      // const regProducts = {
-      //   category: res.categoria,
-      //   name: res.nome,
-      //   size: res.tamanho,
-      //   value: res.valor,
-      //   sku: res["codigo do produto"],
-      // };
-      // data.push(res);
-      // let update = new updateProduct(updateProduct);
-      // const result = await update.save();
-      // });
     }
     res.send(data);
   } catch (e) {
     console.log(e);
   }
 });
-// receber um arquivo excel aqui
-// percorrer o arquivo excel
-// recuperar o product dentro do for pelo sku(codigo do produto)
-// depois de recuperar, pegar os valores do objeto do for e setar dentro desse objeto
-// que você recuperou
-// depois é só chamar um "modelProduct.update"
+
+app.post("/orders/update", uploadType, async (req, res) => {
+  try {
+    const file = reader.readFile(req.file.destination + req.file.filename);
+    let data = [];
+
+    const sheets = file.SheetNames;
+
+    for (let i = 0; i < sheets.length; i++) {
+      const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]]);
+      temp.forEach(async (res) => {
+        let ordersUpdate = {};
+        // array.forEach(async (element) => {
+        let order = await modelOrder
+          .updateOne(
+            {
+              sku: res["codigo do produto"],
+            },
+            {
+              request: res.pedido,
+              value: res.valor,
+              delivery: res.entrega,
+              payment: res.pagamento,
+            }
+          )
+          .exec();
+      });
+    }
+    res.send(data);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.post("/users/update", uploadType, async (req, res) => {
+  try {
+    const file = reader.readFile(req.file.destination + req.file.filename);
+    let data = [];
+
+    const sheets = file.SheetNames;
+
+    for (let i = 0; i < sheets.length; i++) {
+      const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]]);
+      temp.forEach(async (res) => {
+        let usersUpdate = {};
+        // array.forEach(async (element) => {
+        let user = await modelUser
+          .updateOne(
+            {
+              sku: res["codigo do produto"],
+            },
+            {
+              name: res.Nome,
+              email: res["E-mail"],
+              cpf: res.CPF,
+              birthDate: res["Data de Nascimento"],
+              rg: res.RG,
+              sex: res.Sexo,
+            }
+          )
+          .exec();
+      });
+    }
+    res.send(data);
+  } catch (e) {
+    console.log(e);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀👍 Serviço executando em: http://localhost:${PORT}`);

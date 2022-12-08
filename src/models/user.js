@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema(
     birthDate: String,
     rg: String,
     sex: String,
+    sku: String,
   },
   { timestamps: true }
 );
